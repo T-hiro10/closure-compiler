@@ -14,6 +14,9 @@ cache:
 # https://docs.travis-ci.com/user/customizing-the-build#Skipping-the-Installation-Step
 install: true
 
+before_script:
+  echo -n > /home/travis/stream_method_stacktrace.txt
+
 script:
   # Builds the compiler and runs tests
   - mvn -Dstyle.color=always install
@@ -31,6 +34,7 @@ script:
 sudo: required
 
 after_success:
+  - cat /home/travis/stream_method_stacktrace.txt
   - travis_util/deploy_snapshot.sh
 
 env:

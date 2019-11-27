@@ -31,6 +31,11 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -440,6 +445,30 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
               .filter(ImportStatement::isDestructuring)
               .flatMap(i -> i.nodes().stream())
               .collect(toImmutableList());
+// ******* for print stack trace ******
+try (FileOutputStream fileOutputStream = new FileOutputStream(Paths.get("/home/travis/stream_method_stacktrace.txt").toFile(), true);
+    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream, Charset.forName("UTF-8"));
+    BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter)) {
+    String projectNameString = "google";
+    final StackTraceElement[] stackTrace = new RuntimeException().getStackTrace();
+    bufferedWriter.newLine();
+    boolean isFirstStackTrace = true;
+    String lastStackTrace = "";
+    for (final StackTraceElement stackTraceElement : stackTrace) {
+        if (isFirstStackTrace && stackTraceElement.toString().contains(projectNameString)) {
+            bufferedWriter.append(stackTraceElement.toString());
+            bufferedWriter.newLine();
+            isFirstStackTrace = false;
+        } else if (!(isFirstStackTrace) && stackTraceElement.toString().contains(projectNameString)) {
+            lastStackTrace = stackTraceElement.toString();
+        }
+    }
+    bufferedWriter.append(lastStackTrace);
+    bufferedWriter.newLine();
+} catch (Exception e) {
+    e.printStackTrace();
+}
+// ************************************
       ImmutableList<DestructuringBinding> destructures =
           allImports.stream()
               .filter(ImportStatement::isDestructuring)
